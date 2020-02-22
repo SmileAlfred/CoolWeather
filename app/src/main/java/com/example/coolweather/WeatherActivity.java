@@ -83,6 +83,7 @@ public class WeatherActivity extends AppCompatActivity {
         mBingPicImg = findViewById(R.id.bing_pic_img);
 
         mSwipeRefreshLayout = findViewById(R.id.swipe_refresh);
+        //TODO: 还存在 BUG ：选择其他地区，下拉刷新后，仍回到原来的地区
         mSwipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary);//设置下拉刷新进度条的颜色
 
         mDrawerLayout = findViewById(R.id.drawer_layout);
@@ -244,6 +245,6 @@ public class WeatherActivity extends AppCompatActivity {
         mWeatherLayout.setVisibility(View.VISIBLE);
         //  激活 AutoUpdateService 服务
         Intent intent = new Intent(WeatherActivity.this, AutoUpdateService.class);
-        startActivity(intent);
+        startService(intent);
     }
 }
