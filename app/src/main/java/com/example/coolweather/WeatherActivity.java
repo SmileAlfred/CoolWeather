@@ -1,6 +1,10 @@
 package com.example.coolweather;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.interpolator.view.animation.FastOutLinearInInterpolator;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -9,6 +13,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -44,6 +49,10 @@ public class WeatherActivity extends AppCompatActivity {
     private TextView mSportText;
     private ImageView mBingPicImg;
 
+    public SwipeRefreshLayout mSwipeRefreshLayout;
+
+    public DrawerLayout mDrawerLayout;
+    private Button navButton;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,18 +78,39 @@ public class WeatherActivity extends AppCompatActivity {
         mSportText = findViewById(R.id.sport_text);
 
         mBingPicImg = findViewById(R.id.bing_pic_img);
+
+        mSwipeRefreshLayout = findViewById(R.id.swipe_refresh);
+        mSwipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary);//设置下拉刷新进度条的颜色
+
+        mDrawerLayout = findViewById(R.id.drawer_layout);
+        navButton = findViewById(R.id.nav_button);
+
+        navButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mDrawerLayout.openDrawer(GravityCompat.START);
+            }
+        });
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         String weatherString = prefs.getString("weather", null);
+        final String weatherId;
         if (weatherString != null) {
             //有缓存的直接解析天气数据
             Weather weather = Utility.handleWeatherResponse(weatherString);
+            weatherId = weather.mBasic.weatherId;
             showWeatherInfo(weather);
         } else {
             //无缓存的去服务器查询天气
-            String weatherId = getIntent().getStringExtra("weather_id");
+            weatherId = getIntent().getStringExtra("weather_id");
             mWeatherLayout.setVisibility(View.INVISIBLE);   //请求数据时，将其隐藏，不要显示空数据布局
             requestWeather(weatherId);
         }
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                requestWeather(weatherId);
+            }
+        });
         // 读取缓存的 背景图片
         String bingPic = prefs.getString("bing_pic", null);
         if (bingPic != null) {
@@ -118,10 +148,14 @@ public class WeatherActivity extends AppCompatActivity {
     }
 
 
+    public void setTitleCity(TextView titleCity) {
+        mTitleCity = titleCity;
+    }
+
     /**
      * 根据天气ID 请求城市天气信息
      */
-    private void requestWeather(final String weatherId) {
+     void requestWeather(final String weatherId) {
         String weatherUrl = "http://guolin.tech/api/weather?cityid="
                 + weatherId + "&key=6b144bc746a14271860fbd5446d36b7c";
         HttpUtil.sendOkHttpRequest(weatherUrl, new Callback() {
@@ -141,6 +175,7 @@ public class WeatherActivity extends AppCompatActivity {
                         } else {
                             Toast.makeText(WeatherActivity.this, "获取天气信息失败", Toast.LENGTH_SHORT).show();
                         }
+                        mSwipeRefreshLayout.setRefreshing(false);   //刷新事件结束后，隐藏刷新进度条
                     }
                 });
             }
@@ -152,6 +187,7 @@ public class WeatherActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         Toast.makeText(WeatherActivity.this, "获取天气失败", Toast.LENGTH_SHORT).show();
+                        mSwipeRefreshLayout.setRefreshing(false);
                     }
                 });
             }
