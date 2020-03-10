@@ -1,14 +1,12 @@
 package com.example.coolweather.gson;
 
-import android.net.wifi.aware.PublishConfig;
-
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
 /**
  * @author LiuSaiSai
- * @description:
+ * @description:    引用其余各个实体类 的 总的实体类
  * @date :2020/02/21 22:01
  */
 public class Weather {

@@ -36,21 +36,29 @@ import okhttp3.Response;
 
 /**
  * @author LiuSaiSai
- * @description:遍历全国省市县的功能，我们在后面还会复用，因此就不写在活动里面了， 而是写在碎片里，这样需要需用的时候直接在布局里面引用碎片就可以了。
+ * @description: 遍历全国省市县的功能，我们在后面还会复用，因此就不写在活动里面了， 而是写在碎片里，这样需要需用的时候直接在布局里面引用碎片就可以了。
  * 碎片中，最好不要直接使用 ActionBar 或 TooLBar
  * 碎片是不能直接显示在界面上的，需要把它添加到活动中
  * @date :2020/02/21 12:19
  */
 public class ChooseAreaFragment extends Fragment {
+
     public static final int LEVEL_PROVINCE = 0;
+
     public static final int LEVEL_CITY = 1;
+
     public static final int LEVEL_COUNTY = 2;
 
     private ProgressDialog mProgressDialog;
+
     private TextView titleText;
+
     private Button backButton;
+
     private ListView mListView;
+
     private ArrayAdapter<String> adapter;
+
     private List<String> dataList = new ArrayList<>();
 
     /**

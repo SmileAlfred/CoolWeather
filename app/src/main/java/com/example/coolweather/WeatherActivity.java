@@ -40,6 +40,11 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
 
+/**
+ * 存在 BUG ：切换城市后，刷新仍回到第一次选择的地方
+ * 解决方法 https://blog.csdn.net/vipxz95/article/details/60953916?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522158381432219725247656877%2522%252C%2522scm%2522%253A%252220140713.130056874..%2522%257D&request_id=158381432219725247656877&biz_id=0&utm_source=distribute.pc_search_result.none-task
+ */
+
 public class WeatherActivity extends AppCompatActivity {
 
     private ScrollView mWeatherLayout;
@@ -60,6 +65,8 @@ public class WeatherActivity extends AppCompatActivity {
     public DrawerLayout mDrawerLayout;
     private Button navButton;
 
+    private String mWeatherId;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,11 +74,16 @@ public class WeatherActivity extends AppCompatActivity {
             View decorView = getWindow().getDecorView();
             // 表示活动的布局 会显示在 状态栏 上面
             decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+            /**
+             * 将状态栏设置成透明色
+             */
             getWindow().setStatusBarColor(Color.TRANSPARENT);   //将状态栏设置成 透明色
         }
         setContentView(R.layout.activity_weather);
 
-        //初始化控件
+        /**
+         * 初始化控件
+         */
         mWeatherLayout = findViewById(R.id.weather_layout);
         mTitleCity = findViewById(R.id.title_city);
         mTitleUpdateTime = findViewById(R.id.title_update_time);
@@ -92,25 +104,29 @@ public class WeatherActivity extends AppCompatActivity {
         mDrawerLayout = findViewById(R.id.drawer_layout);
         navButton = findViewById(R.id.nav_button);
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences prefs = getSharedPreferences("weatherData",MODE_PRIVATE);
+                //PreferenceManager.getDefaultSharedPreferences(this);
+
         String weatherString = prefs.getString("weather", null);
-        final String weatherId;
         if (weatherString != null) {
             //有缓存的直接解析天气数据
             Weather weather = Utility.handleWeatherResponse(weatherString);
-            weatherId = weather.mBasic.weatherId;
+            mWeatherId = weather.mBasic.weatherId;
             showWeatherInfo(weather);
         } else {
             //无缓存的去服务器查询天气
-            weatherId = getIntent().getStringExtra("weather_id");
+            mWeatherId = getIntent().getStringExtra("weather_id");
             mWeatherLayout.setVisibility(View.INVISIBLE);   //请求数据时，将其隐藏，不要显示空数据布局
-            requestWeather(weatherId);
+            requestWeather(mWeatherId);
         }
 
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                requestWeather(weatherId);
+                /**
+                 * 这里的 weatherId 没有被更新，是导致；切换城市后无法刷新的原因
+                 */
+                requestWeather(mWeatherId);
             }
         });
         // 读取缓存的 背景图片
@@ -138,7 +154,8 @@ public class WeatherActivity extends AppCompatActivity {
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 final String bingPic = response.body().string();
-                SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this).edit();
+                SharedPreferences.Editor editor =getSharedPreferences("bing",MODE_PRIVATE).edit();
+                //已经弃用SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this).edit();
                 editor.putString("bing_pic", bingPic);
                 editor.apply();
                 runOnUiThread(new Runnable() {
@@ -165,8 +182,13 @@ public class WeatherActivity extends AppCompatActivity {
      * 根据天气ID 请求城市天气信息
      */
     public void requestWeather(final String weatherId) {
+
         String weatherUrl = "http://guolin.tech/api/weather?cityid="
                 + weatherId + "&key=6b144bc746a14271860fbd5446d36b7c";
+        /**
+         * 每次请求 WeatherId 都是新的，解决，刷新的bug
+         */
+        this.mWeatherId = weatherId;
         HttpUtil.sendOkHttpRequest(weatherUrl, new Callback() {
             @Override   //回调方法
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
@@ -177,8 +199,8 @@ public class WeatherActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         if (weather != null && "ok".equals(weather.status)) {
-                            SharedPreferences.Editor editor = PreferenceManager
-                                    .getDefaultSharedPreferences(WeatherActivity.this).edit();
+                            SharedPreferences.Editor editor = getSharedPreferences("weatherData",MODE_PRIVATE).edit();
+                            //已经废弃：SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this).edit();
                             editor.putString("weather", responseText);
                             editor.apply();
                             showWeatherInfo(weather);
@@ -219,7 +241,9 @@ public class WeatherActivity extends AppCompatActivity {
         mDegreeText.setText(degree);
         mWeatherInfoText.setText(weatherInfo);
         mForecastLayout.removeAllViews();
-        // 使用 for 循环来处理每天的天气信息
+        /**
+         * 使用 for 循环来处理每天的天气信息
+         */
         for (Forecast forecast : weather.mForecastList) {
             View view = LayoutInflater.from(this).inflate(R.layout.forecast_item, mForecastLayout, false);
 

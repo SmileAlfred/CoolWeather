@@ -14,7 +14,7 @@ import org.json.JSONObject;
 
 /**
  * @author LiuSaiSai
- * @description:解析和处理服务器返回的 省市县的 JSON数据
+ * @description: 解析和处理服务器返回的 省市县的 JSON数据
  * @date :2020/02/21 11:19
  */
 public class Utility {
@@ -72,6 +72,7 @@ public class Utility {
                 JSONArray allCounties = new JSONArray(response);
                 for (int i = 0; i < allCounties.length(); i++) {
                     JSONObject countyObject = allCounties.getJSONObject(i);
+
                     County county = new County();
                     county.setCountyName(countyObject.getString("name"));
                     county.setWeatherId(countyObject.getString("weather_id"));

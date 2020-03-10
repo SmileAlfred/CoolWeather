@@ -19,7 +19,9 @@ public class Forecast {
 
 
     public class Temperature {
+
         public String max;
+
         public String min;
     }
 

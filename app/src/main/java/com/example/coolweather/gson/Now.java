@@ -8,6 +8,7 @@ import com.google.gson.annotations.SerializedName;
  * @date :2020/02/21 21:52
  */
 public class Now {
+
     @SerializedName("tmp")
     public String temperature;
 

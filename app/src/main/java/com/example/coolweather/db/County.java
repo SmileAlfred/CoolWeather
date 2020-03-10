@@ -1,16 +1,20 @@
 package com.example.coolweather.db;
 
-import org.litepal.crud.DataSupport;
+import org.litepal.crud.LitePalSupport;
 
 /**
  * @author LiuSaiSai
  * @description:
  * @date :2020/02/21 10:56
  */
-public class County extends DataSupport {
+public class County extends LitePalSupport {
+
     private int id;
+
     private String countyName; //县名
+
     private String weatherId;
+
     private int cityId;
 
     public int getId() {
